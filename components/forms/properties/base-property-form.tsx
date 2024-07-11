@@ -16,7 +16,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Property } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -39,47 +39,50 @@ const SimpleMDE = dynamic(() => import("react-simplemde-editor"), {
   ssr: false, // Prevent SSR
 });
 
-
 type Props = {
   formSchema: z.ZodSchema<any>;
   defaultValues: any;
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: any) => void;
   fields: Array<{
     name: string;
     label: string;
     type: string;
     placeholder?: string;
     description?: string;
-    min?: number | string,
-    options?: Array<{ id: string; name: string; }>;
-    required?: boolean,
+    min?: number | string;
+    options?: Array<{ id: string; name: string }>;
+    required?: boolean;
   }>;
   property?: Property;
 };
 
-type UserFormValue = z.infer<Props['formSchema']>;
 
-const BasePropertyForm: FC<Props> = ({ formSchema, defaultValues, onSubmit, fields, property }) => {
+const BasePropertyForm: FC<Props> = ({
+  formSchema,
+  defaultValues,
+  onSubmit,
+  fields,
+  property,
+}) => {
   const { push } = useRouter();
   const [images, setImages] = useState<File[]>([]);
+  type UserFormValue = z.infer<typeof formSchema>;
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
   const { toast } = useToast();
 
-  const handleSubmit = async (data: UserFormValue) => {
-    try {
-      await onSubmit({ ...data, images });
-    } catch (e) {
-      console.log(e);
-    }
+  const handleSubmit = () => {
+    console.log("data")
   };
 
-  const renderField = (field: Props['fields'][0]) => {
+
+
+  const renderField = (field: Props["fields"][0]) => {
     switch (field.type) {
-      case 'text':
-      case 'number':
+      case "text":
+      case "number":
         return (
           <FormField
             key={field.name}
@@ -101,7 +104,7 @@ const BasePropertyForm: FC<Props> = ({ formSchema, defaultValues, onSubmit, fiel
             )}
           />
         );
-      case 'select':
+      case "select":
         return (
           <FormField
             key={field.name}
@@ -136,7 +139,7 @@ const BasePropertyForm: FC<Props> = ({ formSchema, defaultValues, onSubmit, fiel
             )}
           />
         );
-      case 'checkbox':
+      case "checkbox":
         return (
           <FormField
             key={field.name}
@@ -152,15 +155,13 @@ const BasePropertyForm: FC<Props> = ({ formSchema, defaultValues, onSubmit, fiel
                 </FormControl>
                 <div className="space-y-1 leading-none">
                   <FormLabel>{field.label}</FormLabel>
-                  <FormDescription>
-                    {field.placeholder}
-                  </FormDescription>
+                  <FormDescription>{field.placeholder}</FormDescription>
                 </div>
               </FormItem>
             )}
           />
         );
-      case 'textarea':
+      case "textarea":
         return (
           <FormField
             key={field.name}
@@ -184,16 +185,22 @@ const BasePropertyForm: FC<Props> = ({ formSchema, defaultValues, onSubmit, fiel
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-2 w-full">
+      <form
+        onSubmit={form.handleSubmit(handleSubmit)}
+        className="space-y-2 w-full"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Property Details</CardTitle>
             </CardHeader>
             <CardContent>
-              {fields.map(renderField)}
+              {fields
+                .filter((field) => field.name !== "features")
+                .map(renderField)}
               <TypeStatusInput />
               <PropertyLocationPicker />
+              {renderField(fields.find((field) => field.name === "features")!)}
             </CardContent>
           </Card>
 
@@ -222,7 +229,7 @@ const BasePropertyForm: FC<Props> = ({ formSchema, defaultValues, onSubmit, fiel
                 onValueChange={(files) => {
                   if (files.length <= 6)
                     setImages(
-                      files.filter((file) => file.type.includes("image")),
+                      files.filter((file) => file.type.includes("image"))
                     );
                 }}
               />

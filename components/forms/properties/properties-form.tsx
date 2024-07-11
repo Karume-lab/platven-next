@@ -50,9 +50,9 @@ const landFormFields = [
     label: "Nature of road access",
     type: "select",
     options: [
-      { id: "1", name: "Highway" },
-      { id: "2", name: "Tarmac" },
-      { id: "3", name: "Murram" },
+      { id: "Highway", name: "Highway" },
+      { id: "Tarmac", name: "Tarmac" },
+      { id: "Murram", name: "Murram" },
     ],
   },
   {
@@ -117,11 +117,11 @@ const appartmentFormFields = [
     label: "Utilities Included",
     type: "multiselect",
     options: [
-      { id: "1", name: "Water" },
-      { id: "2", name: "Electricity" },
-      { id: "3", name: "Internet" },
-      { id: "4", name: "Gas" },
-      { id: "5", name: "Heating" }
+      { id: "Water", name: "Water" },
+      { id: "Electricity", name: "Electricity" },
+      { id: "Internet", name: "Internet" },
+      { id: "Gas", name: "Gas" },
+      { id: "Heating", name: "Heating" }
     ]
   },
   {
@@ -129,11 +129,11 @@ const appartmentFormFields = [
     label: "Amenities",
     type: "multiselect",
     options: [
-      { id: "1", name: "Parking" },
-      { id: "2", name: 'Gym' },
-      { id: "3", name: 'Swimming Pool' },
-      { id: "4", name: 'Security' },
-      { id: "5", name: 'Elevator' }
+      { id: "Parking", name: "Parking" },
+      { id: "Gym", name: 'Gym' },
+      { id: "Swimming Pool", name: 'Swimming Pool' },
+      { id: "Security", name: 'Security' },
+      { id: "Elevator", name: 'Elevator' }
     ]
   },
   {
@@ -195,10 +195,10 @@ const homeFormFields = [
     label: "Home Type",
     type: "select",
     options: [
-      { id: '1', name: 'Single Family' },
-      { id: '2', name: 'Bungalow' },
-      { id: '3', name: 'Condo' },
-      { id: '4', name: 'Multi-Family' }
+      { id: 'Single Family', name: 'Single Family' },
+      { id: 'Bungalow', name: 'Bungalow' },
+      { id: 'Condo', name: 'Condo' },
+      { id: 'Multi-Family', name: 'Multi-Family' }
     ],
     required: true
   },
@@ -219,11 +219,11 @@ const homeFormFields = [
     label: "Flooring",
     type: "multiselect",
     options: [
-      { id: '1', name: 'Hardwood' },
-      { id: '2', name: 'Carpet' },
-      { id: '3', name: 'Tile' },
-      { id: '4', name: 'Vinyl' },
-      { id: '5', name: 'Concrete' }
+      { id: 'Hardwood', name: 'Hardwood' },
+      { id: 'Carpet', name: 'Carpet' },
+      { id: 'Tile', name: 'Tile' },
+      { id: 'Vinyl', name: 'Vinyl' },
+      { id: 'Concrete', name: 'Concrete' }
     ]
   },
   {
@@ -231,11 +231,11 @@ const homeFormFields = [
     label: "Exterior Material",
     type: "multiselect",
     options: [
-      { id: '1', name: 'Brick' },
-      { id: '2', name: 'Vinyl' },
-      { id: '3', name: 'Wood' },
-      { id: '4', name: 'Stucco' },
-      { id: '5', name: 'Stone' }
+      { id: 'Brick', name: 'Brick' },
+      { id: 'Vinyl', name: 'Vinyl' },
+      { id: 'Wood', name: 'Wood' },
+      { id: 'Stucco', name: 'Stucco' },
+      { id: 'Stone', name: 'Stone' }
     ]
   },
   {
@@ -243,11 +243,11 @@ const homeFormFields = [
     label: "Roof",
     type: "select",
     options: [
-      { id: '1', name: 'Asphalt' },
-      { id: '2', name: 'Metal' },
-      { id: '3', name: 'Tile' },
-      { id: '4', name: 'Slate' },
-      { id: '5', name: 'Other' }
+      { id: 'Asphalt', name: 'Asphalt' },
+      { id: 'Metal', name: 'Metal' },
+      { id: 'Tile', name: 'Tile' },
+      { id: 'Slate', name: 'Slate' },
+      { id: 'Other', name: 'Other' }
     ]
   },
   {
@@ -284,58 +284,14 @@ const PropertyForm: FC<Props> = ({ property }) => {
       status: property?.status ?? "onRent",
       subCounty: property?.subCounty ?? "",
       landMark: property?.landMark ?? "",
-      typeId: property?.typeId ?? undefined,
       roadAccessNature: property?.roadAccessNature ?? "Tarmac",
       size: property?.size ?? undefined,
     },
   });
   const { toast } = useToast();
 
-  const onSubmit = async (data: UserFormValue) => {
-    try {
-      let response;
-      if (property)
-        response = await fetch(`/api/properties/${property.id}`, {
-          method: "PUT",
-          body: objectToFormData({ ...data, images }),
-          redirect: "follow",
-        });
-      else
-        response = await fetch("/api/properties", {
-          method: "POST",
-          body: objectToFormData({ ...data, images }),
-          redirect: "follow",
-        });
-      if (response.ok) {
-        const _property: Property = await response.json();
-        push(`/dashboard/properties/${_property.id}/pay`);
-        toast({
-          variant: "default",
-          title: "Success!.",
-          description: `Property ${property ? "updated" : "created"
-            } successfully!.KIndly complete payment to complete the process`,
-        });
-      } else {
-        if (response.status === 400) {
-          const errors = await response.json();
-          for (const key in errors) {
-            const errorMessage = (errors[key]._errors as string[]).join(",");
-            if (key === "images")
-              toast({
-                variant: "destructive",
-                title: "Success!.",
-                description: errorMessage,
-              });
-            form.setError(key as any, {
-              message: errorMessage,
-            });
-          }
-        }
-        console.log();
-      }
-    } catch (e) {
-      console.log(e);
-    }
+  const onLandSubmit = () => {
+    console.log("data")
   };
 
   return (
@@ -350,20 +306,19 @@ const PropertyForm: FC<Props> = ({ property }) => {
           formSchema={landFormSchema}
           defaultValues={
             {
-              title: property?.title ?? "",
-              price: (property?.price as any) ?? "",
-              county: property?.county ?? "",
-              features: property?.features ?? "",
+              title: property?.title ?? "sdf",
+              price: (property?.price as any) ?? 1.2,
+              county: property?.county ?? "Nairobi",
+              features: property?.features ?? "Hello",
               listed: property?.listed ?? true,
               status: property?.status ?? "onRent",
-              subCounty: property?.subCounty ?? "",
-              landMark: property?.landMark ?? "",
-              typeId: property?.typeId ?? undefined,
+              subCounty: property?.subCounty ?? "Westlands",
+              landMark: property?.landMark ?? "N",
               roadAccessNature: property?.roadAccessNature ?? "Tarmac",
-              size: property?.size ?? undefined,
+              size: property?.size ?? "12",
             }
           }
-          onSubmit={onSubmit}
+          onSubmit={onLandSubmit}
           fields={landFormFields}
           property={property}
         />
@@ -381,12 +336,11 @@ const PropertyForm: FC<Props> = ({ property }) => {
               status: property?.status ?? "onRent",
               subCounty: property?.subCounty ?? "",
               landMark: property?.landMark ?? "",
-              typeId: property?.typeId ?? undefined,
               roadAccessNature: property?.roadAccessNature ?? "Tarmac",
               size: property?.size ?? undefined,
             }
           }
-          onSubmit={onSubmit}
+          onSubmit={onLandSubmit}
           fields={appartmentFormFields}
           property={property}
         />
@@ -404,12 +358,11 @@ const PropertyForm: FC<Props> = ({ property }) => {
               status: property?.status ?? "onRent",
               subCounty: property?.subCounty ?? "",
               landMark: property?.landMark ?? "",
-              typeId: property?.typeId ?? undefined,
               roadAccessNature: property?.roadAccessNature ?? "Tarmac",
               size: property?.size ?? undefined,
             }
           }
-          onSubmit={onSubmit}
+          onSubmit={onLandSubmit}
           fields={homeFormFields}
           property={property}
         />

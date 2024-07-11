@@ -41,13 +41,8 @@ const TypeStatusInput: FC<Props> = ({ small = false }) => {
   }, []);
 
   return (
-    <div
-      className={clsx({
-        "grid grid-cols-1 lg:grid-cols-2 lg:gap-3": !small,
-        "flex flex-col space-y-2": small,
-      })}
-    >
-      <FormField
+    <div>
+      {/* <FormField
         control={form.control}
         name="typeId"
         render={({ field }) => (
@@ -68,7 +63,6 @@ const TypeStatusInput: FC<Props> = ({ small = false }) => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                {/* @ts-ignore  */}
                 {types.map((type) => (
                   <SelectItem key={type.id} value={type.id}>
                     {type.title}
@@ -79,7 +73,7 @@ const TypeStatusInput: FC<Props> = ({ small = false }) => {
             <FormMessage />
           </FormItem>
         )}
-      />
+      /> */}
       <FormField
         control={form.control}
         name="status"
