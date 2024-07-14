@@ -44,6 +44,7 @@ type Props = {
   formSchema: z.ZodSchema<any>;
   defaultValues: any;
   images: File[],
+  typeId: string,
   setImages: React.Dispatch<React.SetStateAction<File[]>>;
   fields: Array<{
     name: string;
@@ -63,6 +64,7 @@ const BasePropertyForm: FC<Props> = ({
   defaultValues,
   fields,
   property,
+  typeId,
   images,
   setImages,
 }) => {
@@ -91,16 +93,15 @@ const BasePropertyForm: FC<Props> = ({
           redirect: "follow",
         });
       }
-  
+
       if (response.ok) {
         const _property: Property = await response.json();
         push(`/dashboard/properties/${_property.id}/pay`);
         toast({
           variant: "default",
           title: "Success!.",
-          description: `Property ${
-            property ? "updated" : "created"
-          } successfully!. Kindly complete payment to complete the process`,
+          description: `Property ${property ? "updated" : "created"
+            } successfully!. Kindly complete payment to complete the process`,
         });
       } else {
         if (response.status === 400) {
@@ -124,7 +125,7 @@ const BasePropertyForm: FC<Props> = ({
       console.log(e);
     }
   };
-  
+
 
   const renderField = (field: Props["fields"][0]) => {
     switch (field.type) {

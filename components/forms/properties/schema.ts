@@ -15,7 +15,6 @@ export const propertyFormSchema = z.object({
 });
 
 
-
 export const basePropertyFormSchema = z.object({
   title: z.string().min(1, "Title required"),
   typeId: z.string().uuid("Invalid property type").optional(),
