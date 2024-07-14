@@ -1,6 +1,4 @@
 "use client";
-import { useToast } from "@/components/ui/use-toast";
-import { objectToFormData } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Property } from "@prisma/client";
 import { useRouter } from "next/navigation";
@@ -254,7 +252,6 @@ const homeFormFields = [
     name: "nearbyAmenities",
     label: "Nearby Amenities",
     type: "multiselect",
-    // options should be populated with common amenities
   },
   {
     name: "energyEfficiencyRating",
@@ -269,6 +266,7 @@ const homeFormFields = [
     placeholder: "Enter Feature ...",
   },
 ];
+
 
 const PropertyForm: FC<Props> = ({ property }) => {
   const { push } = useRouter();
@@ -288,11 +286,6 @@ const PropertyForm: FC<Props> = ({ property }) => {
       size: property?.size ?? undefined,
     },
   });
-  const { toast } = useToast();
-
-  const onLandSubmit = () => {
-    console.log("data")
-  };
 
   return (
     <Tabs defaultValue="land">
@@ -304,6 +297,8 @@ const PropertyForm: FC<Props> = ({ property }) => {
       <TabsContent value="land">
         <BasePropertyForm
           formSchema={landFormSchema}
+          images={images}
+          setImages={setImages}
           defaultValues={
             {
               title: property?.title ?? "sdf",
@@ -318,14 +313,15 @@ const PropertyForm: FC<Props> = ({ property }) => {
               size: property?.size ?? "12",
             }
           }
-          onSubmit={onLandSubmit}
           fields={landFormFields}
           property={property}
         />
       </TabsContent>
-      <TabsContent value="appartments">
+      {/* <TabsContent value="appartments">
         <BasePropertyForm
           formSchema={appartmentFormSchema}
+          images={images}
+          setImages={setImages}
           defaultValues={
             {
               title: property?.title ?? "",
@@ -340,13 +336,14 @@ const PropertyForm: FC<Props> = ({ property }) => {
               size: property?.size ?? undefined,
             }
           }
-          onSubmit={onLandSubmit}
           fields={appartmentFormFields}
           property={property}
         />
       </TabsContent>
       <TabsContent value="home">
         <BasePropertyForm
+          images={images}
+          setImages={setImages}
           formSchema={homeFormSchema}
           defaultValues={
             {
@@ -362,11 +359,10 @@ const PropertyForm: FC<Props> = ({ property }) => {
               size: property?.size ?? undefined,
             }
           }
-          onSubmit={onLandSubmit}
           fields={homeFormFields}
           property={property}
         />
-      </TabsContent>
+      </TabsContent> */}
     </Tabs>
   );
 };

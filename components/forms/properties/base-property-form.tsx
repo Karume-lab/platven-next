@@ -16,7 +16,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Property } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { FC, useEffect, useState } from "react";
+import { objectToFormData } from "@/lib/utils";
+import { FC } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -42,7 +43,8 @@ const SimpleMDE = dynamic(() => import("react-simplemde-editor"), {
 type Props = {
   formSchema: z.ZodSchema<any>;
   defaultValues: any;
-  onSubmit: (data: any) => void;
+  images: File[],
+  setImages: React.Dispatch<React.SetStateAction<File[]>>;
   fields: Array<{
     name: string;
     label: string;
@@ -56,28 +58,73 @@ type Props = {
   property?: Property;
 };
 
-
 const BasePropertyForm: FC<Props> = ({
   formSchema,
   defaultValues,
-  onSubmit,
   fields,
   property,
+  images,
+  setImages,
 }) => {
   const { push } = useRouter();
-  const [images, setImages] = useState<File[]>([]);
   type UserFormValue = z.infer<typeof formSchema>;
   const form = useForm<UserFormValue>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
+
   const { toast } = useToast();
 
-  const handleSubmit = () => {
-    console.log("data")
+  const handleSubmit = async (data: UserFormValue) => {
+    try {
+      let response;
+      if (property) {
+        response = await fetch(`/api/properties/${property.id}`, {
+          method: "PUT",
+          body: objectToFormData({ ...data, images, typeId: data.typeId }),
+          redirect: "follow",
+        });
+      } else {
+        response = await fetch("/api/properties", {
+          method: "POST",
+          body: objectToFormData({ ...data, images, typeId: "78364b23-95c3-49a8-b698-04950a728f37" }),
+          redirect: "follow",
+        });
+      }
+  
+      if (response.ok) {
+        const _property: Property = await response.json();
+        push(`/dashboard/properties/${_property.id}/pay`);
+        toast({
+          variant: "default",
+          title: "Success!.",
+          description: `Property ${
+            property ? "updated" : "created"
+          } successfully!. Kindly complete payment to complete the process`,
+        });
+      } else {
+        if (response.status === 400) {
+          const errors = await response.json();
+          for (const key in errors) {
+            const errorMessage = (errors[key]._errors as string[]).join(",");
+            if (key === "images") {
+              toast({
+                variant: "destructive",
+                title: "Error!",
+                description: errorMessage,
+              });
+            }
+            form.setError(key as any, {
+              message: errorMessage,
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.log(e);
+    }
   };
-
-
+  
 
   const renderField = (field: Props["fields"][0]) => {
     switch (field.type) {
@@ -186,7 +233,7 @@ const BasePropertyForm: FC<Props> = ({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleSubmit)}
+        onSubmit={form.handleSubmit((data) => handleSubmit(data))}
         className="space-y-2 w-full"
       >
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">

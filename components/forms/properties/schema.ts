@@ -1,9 +1,24 @@
 import { z } from "zod";
 
 
+export const propertyFormSchema = z.object({
+  title: z.string().min(1, "Title required"),
+  status: z.enum(["onRent", "onSale"]).default("onRent"),
+  price: z.number({ coerce: true }),
+  features: z.string(),
+  county: z.string().min(1, "County Required"),
+  subCounty: z.string().min(1, "Sub county required"),
+  landMark: z.string().min(1, "Landmark required"),
+  roadAccessNature: z.enum(["Highway", "Tarmac", "Murram"]),
+  size: z.string().optional(),
+  listed: z.boolean({ coerce: true }),
+});
+
+
+
 export const basePropertyFormSchema = z.object({
   title: z.string().min(1, "Title required"),
-  typeId: z.string().uuid("Invalid property type"),
+  typeId: z.string().uuid("Invalid property type").optional(),
   status: z.enum(["onRent", "onSale"]).default("onRent"),
   features: z.string(),
   county: z.string().min(1, "County Required"),
