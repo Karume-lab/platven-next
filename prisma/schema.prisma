@@ -67,7 +67,7 @@ model User {
   properties           Property[]
   accounts             Account[]
   OTPVerificatiions    OTPVerificatiion[]
-  accountVerified Boolean @default(false)
+  accountVerified      Boolean            @default(false)
 }
 
 model Team {
@@ -106,28 +106,35 @@ model PropertyType {
 }
 
 model Property {
+  id              String            @id @default(uuid()) @db.Uuid
+  title           String
+  userId          String            @db.Uuid
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  typeId          String            @db.Uuid
+  type            PropertyType      @relation(fields: [typeId], onDelete: Cascade, references: [id])
+  status          PropertyStatus    @default(onRent)
+  price           Decimal           @db.Money
+  features        String?           @db.Text
+  county          String
+  subCounty       String
+  landMark        String
+  images          String[]          @default([])
+  listed          Boolean           @default(true)
+  isActive        Boolean           @default(false)
+  rejectionReason String?           @db.Text
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  requests        PropertyRequest[]
+  payment         Payment?
+  land            Land?
+}
+
+model Land {
   id               String                   @id @default(uuid()) @db.Uuid
-  title            String
-  userId           String                   @db.Uuid
-  user             User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  typeId           String                   @db.Uuid
-  type             PropertyType             @relation(fields: [typeId], onDelete: Cascade, references: [id])
-  status           PropertyStatus           @default(onRent)
-  price            Decimal                  @db.Money
-  features         String?                  @db.Text
-  county           String
-  subCounty        String
-  landMark         String
   roadAccessNature PropertyRoadAccessNature
-  images           String[]                 @default([])
-  listed           Boolean                  @default(true)
-  isActive         Boolean                  @default(false)
-  rejectionReason  String?                  @db.Text
   size             String?
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
-  requests         PropertyRequest[]
-  payment          Payment?
+  propertyId       String                   @unique @db.Uuid
+  property         Property                 @relation(fields: [propertyId], references: [id])
 }
 
 enum PropertyStatus {
@@ -166,8 +173,8 @@ model Payment {
   property           Property @relation(fields: [propertyId], onDelete: Cascade, references: [id])
   complete           Boolean  @default(false)
   description        String?  @db.Text
-  merchantRequestId  String?   @unique
-  checkoutRequestId  String? 
+  merchantRequestId  String?  @unique
+  checkoutRequestId  String?
   resultCode         String?
   resultDescription  String?
   mpesareceiptNumber String?

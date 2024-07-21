@@ -1,7 +1,6 @@
-import { landFormSchema } from "@/components/forms/properties/schema";
+import { propertyFormSchema } from "@/components/forms/properties/schema";
 import {
   getExpiredCookieHeader,
-  getSessionUser,
   saveMediaFileName,
   strToBool,
 } from "@/lib/auth-utils";
@@ -10,43 +9,29 @@ import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 
 export const POST = async (request: NextRequest) => {
-  const user = await getSessionUser();
-  if (!user)
+  const userId = request.headers.get('X-User-Id');
+  const isStaff = Boolean(request.headers.get('X-User-Is-Staff'));
+  const isSuperUser = Boolean(request.headers.get('X-User-Is-Super-User'));
+
+  if (!userId)
     return NextResponse.json(
       { detail: "Unauthorized" },
       { status: 401, headers: getExpiredCookieHeader(request) },
     );
 
   const formData = await request.formData();
-  const data = Array.from(formData.entries()).reduce<any>(
-    (prev, [key, value]) => {
-      if (key === "images") return prev;
-      return { ...prev, [key]: value };
-    },
-    {},
-  );
+  const data = Object.fromEntries(formData);
 
-  // Validate form data using schema
-  const validation = await landFormSchema.safeParseAsync({
+  const validation = await propertyFormSchema.safeParseAsync({
     ...data,
-    listed: strToBool(data.listed),
+    listed: strToBool(data.listed as string),
   });
-
   if (!validation.success)
     return NextResponse.json(validation.error.format(), { status: 400 });
 
   let images;
   const imageFiles = formData.getAll("images") as File[];
-
-  if (imageFiles.length === 0) {
-    return NextResponse.json(
-      { images: { _errors: ["At least one image required"] } },
-      { status: 400 },
-    );
-  }
-
-  try {
-    // Process and save images
+  if (imageFiles.length > 0) {
     const paths = imageFiles.map((file) =>
       saveMediaFileName("properties", file.name ?? "", "jpeg"),
     );
@@ -55,53 +40,40 @@ export const POST = async (request: NextRequest) => {
     const buffers = await Promise.all(
       imageFiles.map((file) => file.arrayBuffer()),
     );
-
-    // Resize and convert images using sharp
     const asyncTasks = buffers.map((buffer, index) =>
       sharp(buffer)
         .toFormat("jpeg", { mozjpeg: true })
         .resize(800, 500, { fit: "cover" })
         .toFile(paths[index].absolutePath),
     );
-
     await Promise.all(asyncTasks);
-  } catch (error) {
-    console.error("Error processing images:", error);
+  } else {
     return NextResponse.json(
-      { images: { _errors: ["Error processing images"] } },
-      { status: 500 },
+      { images: { _errors: ["Atleast one image required"] } },
+      { status: 400 },
     );
   }
 
-  // Create property using Prisma
-  try {
-    const properties = await prisma.property.create({
-      data: {
-        ...validation.data,
-        images,
-        userId: user!.id,
-        isActive: user.isStaff || user.isSuperUser,
-        payment:
-          user.isStaff || user.isSuperUser
-            ? {
-              create: {
-                amount: 0,
-                complete: true,
-                merchantRequestId: null,
-                checkoutRequestId: null,
-              },
-            }
-            : undefined,
-        typeId: validation.data.typeId!,
-      },
-    });
+  const properties = await prisma.property.create({
+    data: {
+      ...validation.data,
+      images,
+      userId: userId,
+      isActive: isStaff || isSuperUser,
+      typeId: "78364b23-95c3-49a8-b698-04950a728f37",
+      payment:
+        isStaff || isSuperUser
+          ? {
+            create: {
+              amount: 0,
+              complete: true,
+              merchantRequestId: null,
+              checkoutRequestId: null,
+            },
+          }
+          : undefined,
+    },
+  });
 
-    return NextResponse.json(properties);
-  } catch (error) {
-    console.error("Error creating property:", error);
-    return NextResponse.json(
-      { detail: "Error creating property" },
-      { status: 500 },
-    );
-  }
+  return NextResponse.json(properties);
 };

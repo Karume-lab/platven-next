@@ -27,12 +27,12 @@ export const basePropertyFormSchema = z.object({
   price: z.number({ coerce: true }),
 });
 
-export const landFormSchema = basePropertyFormSchema.merge(z.object({
+export const landFormSchema = z.object({
   roadAccessNature: z.enum(["Highway", "Tarmac", "Murram"]),
   size: z.string().optional(),
-}));
+});
 
-export const appartmentFormSchema = basePropertyFormSchema.merge(z.object({
+export const appartmentFormSchema = z.object({
   noOfBedRooms: z.number().min(1, "Number of bedrooms must be at least 1"),
   size: z.string().optional(),
   rentPerMonth: z.number().positive("Rent must be a positive number"),
@@ -41,10 +41,10 @@ export const appartmentFormSchema = basePropertyFormSchema.merge(z.object({
   furnished: z.boolean().default(false),
   utilities: z.array(z.enum(['Water', 'Electricity', 'Internet', 'Gas', 'Heating'])).optional(),
   amenities: z.array(z.enum(['Parking', 'Gym', 'Swimming Pool', 'Security', 'Elevator'])).optional(),
-}));
+});
 
 
-export const homeFormSchema = basePropertyFormSchema.merge(z.object({
+export const homeFormSchema = z.object({
   noOfBedRooms: z.number().min(1, "Number of bedrooms must be at least 1"),
   noOfBathrooms: z.number().min(1, "Number of bathrooms must be at least 1"),
   plotSize: z.string().optional(),
@@ -57,7 +57,7 @@ export const homeFormSchema = basePropertyFormSchema.merge(z.object({
   exteriorMaterial: z.array(z.enum(['Brick', 'Vinyl', 'Wood', 'Stucco', 'Stone'])).optional(),
   roof: z.enum(['Asphalt', 'Metal', 'Tile', 'Slate', 'Other']).optional(),
   nearbyAmenities: z.array(z.string()).optional(),
-}));
+});
 
 export const propertyTypeSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
